@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace JoeConticello.ModularCombatCore.Runtime
+namespace JoeConticello.ModularCombatCore
 {
     [CreateAssetMenu(fileName = "StatTypeDatabase", menuName = "Modular Combat Core/Stat Type Database")]
     public sealed class StatTypeDatabase : ScriptableObject

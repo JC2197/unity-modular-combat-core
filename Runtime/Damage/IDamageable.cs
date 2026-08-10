@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace JoeConticello.ModularCombatCore.Runtime
+namespace JoeConticello.ModularCombatCore
 {
     public interface IDamageable
     {
