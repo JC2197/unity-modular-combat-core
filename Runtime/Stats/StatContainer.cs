@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace JoeConticello.ModularCombatCore
+namespace JoeConticello.ModularCombatCore.Runtime
 {
     [Serializable]
     public sealed class StatContainer
