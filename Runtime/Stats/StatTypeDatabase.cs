@@ -44,6 +44,7 @@ namespace JoeConticello.ModularCombatCore
             if (categoryLookup == null)
                 RebuildLookup();
 
+            category = null;
             return !string.IsNullOrWhiteSpace(categoryId) && categoryLookup.TryGetValue(categoryId, out category);
         }
 
@@ -52,6 +53,7 @@ namespace JoeConticello.ModularCombatCore
             if (statLookup == null)
                 RebuildLookup();
 
+            statType = null;
             return !string.IsNullOrWhiteSpace(statId) && statLookup.TryGetValue(statId, out statType);
         }
 
