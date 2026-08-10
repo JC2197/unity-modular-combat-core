@@ -1,6 +1,6 @@
 {
 	"name": "com.joeconticello.modular-combat-core",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"displayName": "Modular Combat Core",
 	"description": "Reusable damage contracts and modular stats for Unity projects.",
 	"unity": "6000.0",
