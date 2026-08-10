@@ -2,7 +2,7 @@
   "name": "JoeConticello.ModularCombatCore.Tests.Editor",
   "rootNamespace": "JoeConticello.ModularCombatCore.Tests",
   "references": [
-    "JoeConticello.ModularCombatCore.Runtime"
+    "GUID:502f9e82839c41b18c404bf4428ae686"
   ],
   "includePlatforms": [
     "Editor"
