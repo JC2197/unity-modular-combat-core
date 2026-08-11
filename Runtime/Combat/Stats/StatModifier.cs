@@ -8,30 +8,37 @@ public enum ModifierType
 }
 
 [System.Serializable]
-public class StatModifier
+namespace JoeConticello.ModularCombatCore
 {
-    [Tooltip("Stat to modify (from StatTypeDatabase)")]
-    public string statID = "MoveSpeed";
-    
-    [Tooltip("How to apply the modifier")]
-    public ModifierType modifierType = ModifierType.Flat;
-    
-    [Tooltip("Value to add/multiply")]
-    public float value = 10f;
-    
-    public string GetDisplayText()
+    /// <summary>
+    /// Represents a stat modifier that can be applied to a character's stats.
+    /// </summary>
+    [System.Serializable]
+    public class StatModifier
     {
-        string sign = value >= 0 ? "+" : "";
-        switch (modifierType)
+        [Tooltip("Stat to modify (from StatTypeDatabase)")]
+        public string statID = "MoveSpeed";
+        
+        [Tooltip("How to apply the modifier")]
+        public ModifierType modifierType = ModifierType.Flat;
+        
+        [Tooltip("Value to add/multiply")]
+        public float value = 10f;
+        
+        public string GetDisplayText()
         {
-            case ModifierType.Flat:
-                return $"{sign}{value}";
-            case ModifierType.Percentage:
-                return $"{sign}{value}%";
-            case ModifierType.Override:
-                return $"={value}";
-            default:
-                return value.ToString();
+            string sign = value >= 0 ? "+" : "";
+            switch (modifierType)
+            {
+                case ModifierType.Flat:
+                    return $"{sign}{value}";
+                case ModifierType.Percentage:
+                    return $"{sign}{value}%";
+                case ModifierType.Override:
+                    return $"={value}";
+                default:
+                    return value.ToString();
+            }
         }
     }
 }
