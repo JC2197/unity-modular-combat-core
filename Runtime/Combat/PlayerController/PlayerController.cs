@@ -2803,53 +2803,7 @@ public class PlayerController : Organism
         return effectManager.GetMovementSpeedMultiplier();
     }
 
-    private void UpdateFootstepParticles()
-    {
-        if (footstepParticles == null || currentCharacterData == null || currentCharacterData.GetFootstepSettings() == null) return;
-
-        bool isMoving = IsMoving();
-
-        if (isMoving)
-        {
-            // Calculate time per frame based on samples per second from CharacterData
-            float timePerFrame = 1f / currentCharacterData.GetFootstepSettings().animationSamplesPerSecond;
-
-            // Play immediately on first frame of movement
-            if (!footstepParticlesPlaying)
-            {
-                footstepParticles.Play();
-                footstepParticlesPlaying = true;
-                AudioManager.Instance.PlaySpatialSound(currentCharacterData.GetFootstepSettings().footstepSound, transform.position);
-            }
-
-            footstepTimer += Time.deltaTime;
-
-            // Check if we've advanced to the next frame
-            while (footstepTimer >= timePerFrame)
-            {
-                footstepTimer -= timePerFrame;
-                currentAnimationFrame = (currentAnimationFrame + 1) % currentCharacterData.GetFootstepSettings().animationTotalFrames;
-
-                // Emit particles every framesPerStep frames
-                if (currentAnimationFrame % currentCharacterData.GetFootstepSettings().framesPerStep == 0)
-                {
-                    footstepParticles.Play();
-                    AudioManager.Instance.PlaySpatialSound(currentCharacterData.GetFootstepSettings().footstepSound, transform.position);
-                }
-            }
-        }
-        else
-        {
-            // Reset when stopped
-            if (footstepParticlesPlaying)
-            {
-                footstepTimer = 0f;
-                currentAnimationFrame = 0;
-                footstepParticlesPlaying = false;
-            }
-        }
-    }
-
+    
     private void UpdateMovementAnimation()
     {
         if (!isGearAnimationReady)
