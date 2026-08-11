@@ -42,6 +42,11 @@ namespace JoeConticello.ModularCombatCore
             return true;
         }
 
+        public bool InitializeFromDatabase(string resourcePath = "StatTypeDatabase")
+        {
+            return InitializeFromResources(resourcePath);
+        }
+
         public int Migrate(StatTypeDatabase database)
         {
             if (database == null)

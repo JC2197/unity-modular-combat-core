@@ -1,4 +1,5 @@
 using UnityEngine;
+using JoeConticello.ModularCombatCore;
 
 /// <summary>
 /// Simplified stat structure for enemies with only the stats needed for combat
@@ -67,6 +68,10 @@ public class EnemyStats
     [Tooltip("Nature damage resistance (0-1, where 0.5 = 50% reduction)")]
     [Range(0f, 1f)]
     public float natureResistance = 0f;
+
+    [Header("Additional Stat Overrides")]
+    [Tooltip("Optional stat overrides keyed by StatTypeDatabase IDs, such as ShadowResistance or RadiantDamageBonus.")]
+    public List<EnemyStatOverride> additionalStats = new List<EnemyStatOverride>();
     
     /// <summary>
     /// Copy stat values to a runtime StatContainer for compatibility with existing systems
@@ -103,5 +108,21 @@ public class EnemyStats
         destination.SetStat("LightResistance", lightResistance);
         destination.SetStat("DarkResistance", darkResistance);
         destination.SetStat("NatureResistance", natureResistance);
+
+        for (int i = 0; i < additionalStats.Count; i++)
+        {
+            EnemyStatOverride statOverride = additionalStats[i];
+            if (statOverride == null || string.IsNullOrWhiteSpace(statOverride.statId))
+                continue;
+
+            destination.SetStat(statOverride.statId, statOverride.value);
+        }
     }
+}
+
+[System.Serializable]
+public class EnemyStatOverride
+{
+    public string statId;
+    public float value;
 }

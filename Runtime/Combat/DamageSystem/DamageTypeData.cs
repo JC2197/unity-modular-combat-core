@@ -1,5 +1,6 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public enum DamageCategory
 {
@@ -55,12 +56,11 @@ public class DamageTypeData : ScriptableObject
     public string description = "";
     public Color damageColor = Color.red;
     
-    [Header("Category & Subcategories")]
-    public DamageCategory category = DamageCategory.Physical;
-    public PhysicalSubcategory physicalSubcategory = PhysicalSubcategory.None;
-    public ElementalSubcategory elementalSubcategory = ElementalSubcategory.None;
-    public MagicalSubcategory magicalSubcategory = MagicalSubcategory.None;
-    public SpecialSubcategory specialSubcategory = SpecialSubcategory.None;
+    [Header("Category & Tags")]
+    public string categoryId = "physical";
+    public string categoryName = "Physical";
+    public string subcategoryName = "";
+    public List<string> tags = new List<string>();
     
     [Header("Critical Hits")]
     public bool canCriticalHit = true;
@@ -68,27 +68,70 @@ public class DamageTypeData : ScriptableObject
     [Header("Damage Interactions")]
     public List<DamageTypeInteraction> interactions = new List<DamageTypeInteraction>();
 
+    [Header("Stat Sync")]
+    public bool createResistanceStat = true;
+    public bool createDamageBonusStat = true;
+
     [Header("Special Properties")]
     public bool ignoresShields = false;
 
+    [SerializeField, HideInInspector] private DamageCategory category = DamageCategory.Physical;
+    [SerializeField, HideInInspector] private PhysicalSubcategory physicalSubcategory = PhysicalSubcategory.None;
+    [SerializeField, HideInInspector] private ElementalSubcategory elementalSubcategory = ElementalSubcategory.None;
+    [SerializeField, HideInInspector] private MagicalSubcategory magicalSubcategory = MagicalSubcategory.None;
+    [SerializeField, HideInInspector] private SpecialSubcategory specialSubcategory = SpecialSubcategory.None;
+
+    public string GetCategoryName()
+    {
+        if (!string.IsNullOrWhiteSpace(categoryName))
+            return categoryName.Trim();
+
+        if (!string.IsNullOrWhiteSpace(categoryId))
+            return categoryId.Trim();
+
+        return "Uncategorized";
+    }
+
     /// <summary>
-    /// Get the subcategory as a string based on the main category
+    /// Returns the optional subtype label for filtering and tag matching.
     /// </summary>
     public string GetSubcategory()
     {
-        switch (category)
+        return string.IsNullOrWhiteSpace(subcategoryName) ? GetCategoryName() : subcategoryName.Trim();
+    }
+
+    public bool MatchesCategory(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        return string.Equals(categoryId, value, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(GetCategoryName(), value, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public IEnumerable<string> GetAllTagNames()
+    {
+        HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        void Add(string value)
         {
-            case DamageCategory.Physical:
-                return physicalSubcategory != PhysicalSubcategory.None ? physicalSubcategory.ToString() : category.ToString();
-            case DamageCategory.Elemental:
-                return elementalSubcategory != ElementalSubcategory.None ? elementalSubcategory.ToString() : category.ToString();
-            case DamageCategory.Magical:
-                return magicalSubcategory != MagicalSubcategory.None ? magicalSubcategory.ToString() : category.ToString();
-            case DamageCategory.Special:
-                return specialSubcategory != SpecialSubcategory.None ? specialSubcategory.ToString() : category.ToString();
-            default:
-                return category.ToString();
+            if (!string.IsNullOrWhiteSpace(value))
+                seen.Add(value.Trim());
         }
+
+        Add(damageTypeName);
+        Add(displayName);
+        Add(categoryId);
+        Add(GetCategoryName());
+
+        string subtype = GetSubcategory();
+        if (!string.Equals(subtype, GetCategoryName(), StringComparison.OrdinalIgnoreCase))
+            Add(subtype);
+
+        for (int i = 0; i < tags.Count; i++)
+            Add(tags[i]);
+
+        return seen;
     }
 
     public float CalculateDamage(float baseDamage, MainStats attackerStats, DefenseStats defenderStats)
@@ -116,6 +159,76 @@ public class DamageTypeData : ScriptableObject
         }
         
         return desc;
+    }
+
+    private void OnEnable()
+    {
+        MigrateLegacyCategoryData();
+        NormalizeValues();
+    }
+
+    private void OnValidate()
+    {
+        MigrateLegacyCategoryData();
+        NormalizeValues();
+    }
+
+    private void MigrateLegacyCategoryData()
+    {
+        if (string.IsNullOrWhiteSpace(categoryId))
+            categoryId = category.ToString();
+
+        if (string.IsNullOrWhiteSpace(categoryName))
+            categoryName = category.ToString();
+
+        if (string.IsNullOrWhiteSpace(subcategoryName))
+        {
+            string legacySubtype = GetLegacySubcategoryName();
+            if (!string.IsNullOrWhiteSpace(legacySubtype) && !string.Equals(legacySubtype, category.ToString(), StringComparison.OrdinalIgnoreCase))
+                subcategoryName = legacySubtype;
+        }
+    }
+
+    private string GetLegacySubcategoryName()
+    {
+        switch (category)
+        {
+            case DamageCategory.Physical:
+                return physicalSubcategory != PhysicalSubcategory.None ? physicalSubcategory.ToString() : category.ToString();
+            case DamageCategory.Elemental:
+                return elementalSubcategory != ElementalSubcategory.None ? elementalSubcategory.ToString() : category.ToString();
+            case DamageCategory.Magical:
+                return magicalSubcategory != MagicalSubcategory.None ? magicalSubcategory.ToString() : category.ToString();
+            case DamageCategory.Special:
+                return specialSubcategory != SpecialSubcategory.None ? specialSubcategory.ToString() : category.ToString();
+            default:
+                return category.ToString();
+        }
+    }
+
+    private void NormalizeValues()
+    {
+        damageTypeName = string.IsNullOrWhiteSpace(damageTypeName) ? name : damageTypeName.Trim();
+        displayName = string.IsNullOrWhiteSpace(displayName) ? damageTypeName : displayName.Trim();
+        categoryId = string.IsNullOrWhiteSpace(categoryId) ? GetCategoryName() : categoryId.Trim();
+        categoryName = string.IsNullOrWhiteSpace(categoryName) ? categoryId : categoryName.Trim();
+        subcategoryName = string.IsNullOrWhiteSpace(subcategoryName) ? string.Empty : subcategoryName.Trim();
+
+        HashSet<string> uniqueTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        List<string> normalizedTags = new List<string>();
+        for (int i = 0; i < tags.Count; i++)
+        {
+            string value = string.IsNullOrWhiteSpace(tags[i]) ? string.Empty : tags[i].Trim();
+            if (string.IsNullOrWhiteSpace(value) || !uniqueTags.Add(value))
+                continue;
+
+            normalizedTags.Add(value);
+        }
+
+        if (normalizedTags.Count != tags.Count)
+        {
+            tags = normalizedTags;
+        }
     }
 }
 

@@ -1,12 +1,29 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using JoeConticello.ModularCombatCore;
 
 /// <summary>
 /// Editor window to create and configure damage types with their associated status effects
 /// </summary>
 public class DamageTypeSetupWindow : EditorWindow
 {
+    private const string DefaultFolderPath = "Assets/Data/DamageTypes";
+
+    private string folderPath = DefaultFolderPath;
+    private string damageTypeName = "";
+    private string displayName = "";
+    private string categoryId = "";
+    private string categoryName = "";
+    private string subcategoryName = "";
+    private string tagsCsv = "";
+    private string description = "";
+    private Color damageColor = Color.white;
+    private bool canCriticalHit = true;
+    private bool createResistanceStat = true;
+    private bool createDamageBonusStat = true;
+    private bool ignoreShields = false;
+
     [MenuItem("Tools/Damage Type Setup")]
     public static void ShowWindow()
     {
@@ -23,29 +40,15 @@ public class DamageTypeSetupWindow : EditorWindow
         EditorGUILayout.LabelField("Damage Type Configuration", EditorStyles.boldLabel);
         
         EditorGUILayout.HelpBox(
-            "This tool creates the damage types with their associated status effects:\n\n" +
-            "PHYSICAL:\n" +
-            "• Piercing - Slow → Root\n" +
-            "• Bludgeoning - Daze → Stun\n" +
-            "• Slashing + Bleed (DoT)\n\n" +
-            "ELEMENTAL:\n" +
-            "• Fire + Burn (DoT)\n" +
-            "• Frost - Slow → Root\n" +
-            "• Lightning - Daze → Stun\n\n" +
-            "MAGICAL:\n" +
-            "• Light - Daze → Stun\n" +
-            "• Dark - Slow → Root\n" +
-            "• Nature + Poison (DoT)",
+            "Create damage types from freeform names, categories, and tags. " +
+            "These assets drive dropdowns and stat sync without relying on hardcoded enums.",
             MessageType.Info
         );
         
         EditorGUILayout.Space(10);
-        
-        if (GUILayout.Button("Create All Damage Types", GUILayout.Height(40)))
-        {
-            CreateAllDamageTypes();
-        }
-        
+
+        DrawCreateForm();
+
         EditorGUILayout.Space(10);
         
         EditorGUILayout.BeginHorizontal();
@@ -69,96 +72,142 @@ public class DamageTypeSetupWindow : EditorWindow
         EditorGUILayout.EndScrollView();
     }
     
-    private void CreateAllDamageTypes()
+    private void DrawCreateForm()
     {
-        string folderPath = "Assets/Data/DamageTypes";
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        EditorGUILayout.LabelField("Create Damage Type", EditorStyles.boldLabel);
+
+        folderPath = EditorGUILayout.TextField("Folder", folderPath);
+        damageTypeName = EditorGUILayout.TextField("Damage Type Name", damageTypeName);
+        displayName = EditorGUILayout.TextField("Display Name", displayName);
+        categoryId = EditorGUILayout.TextField("Category ID", categoryId);
+        categoryName = EditorGUILayout.TextField("Category Name", categoryName);
+        subcategoryName = EditorGUILayout.TextField("Subtype", subcategoryName);
+        damageColor = EditorGUILayout.ColorField("Color", damageColor);
+        canCriticalHit = EditorGUILayout.Toggle("Can Critical Hit", canCriticalHit);
+        createResistanceStat = EditorGUILayout.Toggle("Create Resistance Stat", createResistanceStat);
+        createDamageBonusStat = EditorGUILayout.Toggle("Create Damage Bonus Stat", createDamageBonusStat);
+        ignoreShields = EditorGUILayout.Toggle("Ignores Shields", ignoreShields);
+        EditorGUILayout.LabelField("Tags (comma separated)");
+        tagsCsv = EditorGUILayout.TextField(tagsCsv);
+        EditorGUILayout.LabelField("Description");
+        description = EditorGUILayout.TextArea(description, GUILayout.MinHeight(60f));
+
+        EditorGUI.BeginDisabledGroup(string.IsNullOrWhiteSpace(damageTypeName));
+        if (GUILayout.Button("Create Damage Type", GUILayout.Height(32)))
+        {
+            CreateDamageType();
+        }
+        EditorGUI.EndDisabledGroup();
+
+        EditorGUILayout.EndVertical();
+    }
+
+    private void CreateDamageType()
+    {
+        string targetFolderPath = string.IsNullOrWhiteSpace(folderPath) ? DefaultFolderPath : folderPath.Trim();
         
         // Create folders if they don't exist
         if (!AssetDatabase.IsValidFolder("Assets/Data"))
         {
             AssetDatabase.CreateFolder("Assets", "Data");
         }
-        if (!AssetDatabase.IsValidFolder(folderPath))
+        if (!AssetDatabase.IsValidFolder(targetFolderPath))
         {
             AssetDatabase.CreateFolder("Assets/Data", "DamageTypes");
         }
-        
-        List<DamageTypeData> createdTypes = new List<DamageTypeData>();
-        
+
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
+
+        DamageTypeData createdType = CreateDamageTypeAsset(targetFolderPath);
+        if (createdType == null)
+            return;
         
         // Add to DamageTypeDatabase
         DamageTypeDatabase db = Resources.Load<DamageTypeDatabase>("DamageTypeDatabase");
         if (db != null)
         {
-            foreach (var damageType in createdTypes)
+            if (!db.damageTypes.Contains(createdType))
             {
-                if (!db.damageTypes.Contains(damageType))
-                {
-                    db.damageTypes.Add(damageType);
-                }
+                db.damageTypes.Add(createdType);
             }
             EditorUtility.SetDirty(db);
             AssetDatabase.SaveAssets();
         }
         
-        Debug.Log($"Created {createdTypes.Count} damage types and added to DamageTypeDatabase!");
+        ResetCreateForm();
+        Debug.Log($"Created damage type '{createdType.damageTypeName}' and added it to DamageTypeDatabase.");
     }
     
-    private DamageTypeData CreateDamageType(string folderPath, string name, DamageCategory category,
-        PhysicalSubcategory physical, ElementalSubcategory elemental, MagicalSubcategory magical, SpecialSubcategory special,
-        StatusEffectType statusEffect, float statusChance, string description, bool ignoreShields)
+    private DamageTypeData CreateDamageTypeAsset(string targetFolderPath)
     {
-        string assetPath = $"{folderPath}/{name}Damage.asset";
+        string normalizedName = damageTypeName.Trim();
+        string assetPath = $"{targetFolderPath}/{normalizedName}Damage.asset";
         
         // Check if already exists
         DamageTypeData existing = AssetDatabase.LoadAssetAtPath<DamageTypeData>(assetPath);
         if (existing != null)
         {
-            Debug.Log($"Damage type '{name}' already exists, skipping.");
+            Debug.Log($"Damage type '{normalizedName}' already exists, skipping.");
             return existing;
         }
         
         var damageType = ScriptableObject.CreateInstance<DamageTypeData>();
-        damageType.damageTypeName = name;
-        damageType.displayName = name;
-        damageType.description = description;
-        damageType.category = category;
-        damageType.physicalSubcategory = physical;
-        damageType.elementalSubcategory = elemental;
-        damageType.magicalSubcategory = magical;
-        damageType.specialSubcategory = special;
+        damageType.damageTypeName = normalizedName;
+        damageType.displayName = string.IsNullOrWhiteSpace(displayName) ? normalizedName : displayName.Trim();
+        damageType.categoryId = string.IsNullOrWhiteSpace(categoryId) ? normalizedName : categoryId.Trim();
+        damageType.categoryName = string.IsNullOrWhiteSpace(categoryName) ? damageType.categoryId : categoryName.Trim();
+        damageType.subcategoryName = string.IsNullOrWhiteSpace(subcategoryName) ? string.Empty : subcategoryName.Trim();
+        damageType.description = string.IsNullOrWhiteSpace(description) ? string.Empty : description.Trim();
+        damageType.damageColor = damageColor;
+        damageType.canCriticalHit = canCriticalHit;
+        damageType.createResistanceStat = createResistanceStat;
+        damageType.createDamageBonusStat = createDamageBonusStat;
         damageType.ignoresShields = ignoreShields;
-        
-        // Set colors based on category
-        switch (category)
-        {
-            case DamageCategory.Physical:
-                damageType.damageColor = new Color(0.8f, 0.4f, 0.2f); // Brown/Orange
-                break;
-            case DamageCategory.Elemental:
-                if (elemental == ElementalSubcategory.Fire)
-                    damageType.damageColor = new Color(1f, 0.3f, 0f); // Red/Orange
-                else if (elemental == ElementalSubcategory.Ice)
-                    damageType.damageColor = new Color(0.3f, 0.8f, 1f); // Cyan
-                else if (elemental == ElementalSubcategory.Lightning)
-                    damageType.damageColor = new Color(1f, 1f, 0.3f); // Yellow
-                else if (elemental == ElementalSubcategory.Poison)
-                    damageType.damageColor = new Color(0.4f, 0.8f, 0.2f); // Green
-                break;
-            case DamageCategory.Magical:
-                if (magical == MagicalSubcategory.Holy)
-                    damageType.damageColor = new Color(1f, 1f, 0.8f); // Light Yellow
-                else if (magical == MagicalSubcategory.Dark)
-                    damageType.damageColor = new Color(0.4f, 0.2f, 0.6f); // Purple
-                break;
-        }
+        damageType.tags = ParseTags(tagsCsv);
         
         AssetDatabase.CreateAsset(damageType, assetPath);
-        Debug.Log($"Created damage type: {name}");
+        EditorUtility.SetDirty(damageType);
+        Debug.Log($"Created damage type: {normalizedName}");
         
         return damageType;
+    }
+
+    private static List<string> ParseTags(string csv)
+    {
+        List<string> parsedTags = new List<string>();
+        if (string.IsNullOrWhiteSpace(csv))
+            return parsedTags;
+
+        HashSet<string> uniqueTags = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+        string[] values = csv.Split(',');
+        for (int i = 0; i < values.Length; i++)
+        {
+            string tag = values[i].Trim();
+            if (string.IsNullOrWhiteSpace(tag) || !uniqueTags.Add(tag))
+                continue;
+
+            parsedTags.Add(tag);
+        }
+
+        return parsedTags;
+    }
+
+    private void ResetCreateForm()
+    {
+        damageTypeName = string.Empty;
+        displayName = string.Empty;
+        categoryId = string.Empty;
+        categoryName = string.Empty;
+        subcategoryName = string.Empty;
+        tagsCsv = string.Empty;
+        description = string.Empty;
+        damageColor = Color.white;
+        canCriticalHit = true;
+        createResistanceStat = true;
+        createDamageBonusStat = true;
+        ignoreShields = false;
     }
     
     private void SyncStatsWithDamageTypes()
@@ -235,7 +284,15 @@ public class DamageTypeSetupWindow : EditorWindow
             
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField(dt.displayName, EditorStyles.boldLabel);
-            EditorGUILayout.LabelField($"Category: {dt.category}");
+            EditorGUILayout.LabelField($"Category: {dt.GetCategoryName()}");
+            if (!string.IsNullOrWhiteSpace(dt.subcategoryName))
+            {
+                EditorGUILayout.LabelField($"Subtype: {dt.subcategoryName}");
+            }
+            if (dt.tags != null && dt.tags.Count > 0)
+            {
+                EditorGUILayout.LabelField($"Tags: {string.Join(", ", dt.tags)}");
+            }
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space(2);
         }

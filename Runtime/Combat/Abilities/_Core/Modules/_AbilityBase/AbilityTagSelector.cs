@@ -21,9 +21,7 @@ public class AbilityTagSelector
         {
             if (damageType == null) continue;
             
-            if (tagName.Equals(damageType.displayName, System.StringComparison.OrdinalIgnoreCase) ||
-                tagName.Equals(damageType.GetSubcategory(), System.StringComparison.OrdinalIgnoreCase) ||
-                tagName.Equals(damageType.category.ToString(), System.StringComparison.OrdinalIgnoreCase))
+            if (damageType.GetAllTagNames().Any(tag => tagName.Equals(tag, System.StringComparison.OrdinalIgnoreCase)))
             {
                 return true;
             }
@@ -88,29 +86,29 @@ public class AbilityTagSelector
         return tags.All(tag => HasTag(tag));
     }
     
-    public bool HasDamageType(DamageCategory category)
+    public bool HasDamageType(string categoryName)
     {
-        return selectedDamageTypes.Any(dt => dt.category == category);
+        return selectedDamageTypes.Any(dt => dt != null && dt.MatchesCategory(categoryName));
     }
     
     public bool HasElementalDamage()
     {
-        return HasDamageType(DamageCategory.Elemental);
+        return HasDamageType("Elemental");
     }
     
     public bool HasPhysicalDamage()
     {
-        return HasDamageType(DamageCategory.Physical);
+        return HasDamageType("Physical");
     }
     
     public bool HasMagicalDamage()
     {
-        return HasDamageType(DamageCategory.Magical);
+        return HasDamageType("Magical");
     }
     
-    public List<DamageTypeData> GetDamageTypesByCategory(DamageCategory category)
+    public List<DamageTypeData> GetDamageTypesByCategory(string categoryName)
     {
-        return selectedDamageTypes.Where(dt => dt.category == category).ToList();
+        return selectedDamageTypes.Where(dt => dt != null && dt.MatchesCategory(categoryName)).ToList();
     }
     
     // Get all combined tags (regular + damage types)
@@ -122,14 +120,7 @@ public class AbilityTagSelector
         {
             if (damageType != null)
             {
-                allTags.Add(damageType.displayName);
-                allTags.Add(damageType.category.ToString());
-                
-                string subcategory = damageType.GetSubcategory();
-                if (subcategory != damageType.category.ToString())
-                {
-                    allTags.Add(subcategory);
-                }
+                allTags.AddRange(damageType.GetAllTagNames());
             }
         }
         

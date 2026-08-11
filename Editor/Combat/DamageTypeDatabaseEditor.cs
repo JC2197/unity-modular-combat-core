@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using JoeConticello.ModularCombatCore;
 
 /// <summary>
 /// Custom editor for DamageTypeDatabase showing sync status with StatTypeDatabase
@@ -58,12 +59,12 @@ public class DamageTypeDatabaseEditor : Editor
             if (damageType == null) continue;
             
             string resistanceID = $"{damageType.damageTypeName}Resistance";
-            bool hasResistance = statDB.statTypes.Exists(s => s.statID == resistanceID);
+            bool hasResistance = !damageType.createResistanceStat
+                || statDB.StatTypes.Any(s => string.Equals(s.StatId, resistanceID, System.StringComparison.OrdinalIgnoreCase));
             
             string damageID = $"{damageType.damageTypeName}DamageBonus";
-            bool hasDamage = damageType.category == DamageCategory.Special && damageType.specialSubcategory == SpecialSubcategory.True
-                ? true // True damage doesn't need damage bonus
-                : statDB.statTypes.Exists(s => s.statID == damageID);
+            bool hasDamage = !damageType.createDamageBonusStat
+                || statDB.StatTypes.Any(s => string.Equals(s.StatId, damageID, System.StringComparison.OrdinalIgnoreCase));
             
             if (hasResistance && hasDamage)
                 syncedCount++;
