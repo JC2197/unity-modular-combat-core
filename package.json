@@ -9,6 +9,10 @@
 		"damage",
 		"stats"
 	],
+	"dependencies": {
+		"com.unity.inputsystem": "1.7.0",
+		"com.unity.render-pipelines.universal": "17.0.0"
+	},
 	"author": {
 		"name": "Joe Conticello"
 	}
