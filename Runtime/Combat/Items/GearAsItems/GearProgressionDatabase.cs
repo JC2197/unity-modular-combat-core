@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JoeConticello.ModularCombatCore;
 using UnityEngine;
 using UnityEngine.Serialization;
 

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Serialization;
+using JoeConticello.ModularCombatCore;
 
 /// <summary>
 /// Configuration for armor gear items.

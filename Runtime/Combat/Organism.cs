@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using FishNet.Object;
 using FishNet;
 using FishNet.Object.Synchronizing;
+using JoeConticello.ModularCombatCore;
 public abstract class Organism : NetworkBehaviour, IDamageable, IDamageFloaterSource
 {
     [Header("Basic Properties")]

@@ -1,6 +1,6 @@
 using UnityEngine;
 using System;
-
+using JoeConticello.ModularCombatCore;
 /// <summary>
 /// Manages player level progression and skill point rewards.
 /// Works with ExperienceManager for XP tracking.

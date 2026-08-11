@@ -8,6 +8,8 @@ using FishNet.Object;
 using FishNet.Component.Animating;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
+using JoeConticello.ModularCombatCore;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif

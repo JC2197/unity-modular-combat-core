@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Serialization;
+using JoeConticello.ModularCombatCore;
 
 /// <summary>
 /// Defines a range for a defensive stat on armor.

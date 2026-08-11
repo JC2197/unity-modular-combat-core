@@ -5,6 +5,7 @@ using FishNet;
 using FishNet.Object;
 using FishNet.Component.Transforming;
 using FishNet.Component.Animating;
+using JoeConticello.ModularCombatCore;
 using JoeConticello.VisualEffects;
 
 public class Enemy : Organism

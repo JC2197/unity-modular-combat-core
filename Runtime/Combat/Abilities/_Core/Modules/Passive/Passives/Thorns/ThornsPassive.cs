@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using JoeConticello.ModularCombatCore;
 /// <summary>
 /// Thorns passive effect - deals damage back to attackers when hit.
 /// Triggered by traits that grant thorns damage.

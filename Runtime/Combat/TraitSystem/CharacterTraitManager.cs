@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-
+using JoeConticello.ModularCombatCore;
 /// <summary>
 /// Manages all traits for a character, including activation, deactivation, and stat calculation.
 /// Attach this to your player character GameObject.

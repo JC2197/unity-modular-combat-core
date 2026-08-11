@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using JoeConticello.ModularCombatCore;
 
 /// <summary>
 /// Centralized system for generating ItemInstances from configs.

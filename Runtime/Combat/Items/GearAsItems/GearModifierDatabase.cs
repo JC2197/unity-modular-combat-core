@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using JoeConticello.ModularCombatCore;
 
 /// <summary>
 /// Database of prefixes and suffixes that can roll on gear items.

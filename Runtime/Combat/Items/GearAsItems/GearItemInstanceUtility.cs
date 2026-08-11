@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using JoeConticello.ModularCombatCore;
 using UnityEngine;
 
 /// <summary>

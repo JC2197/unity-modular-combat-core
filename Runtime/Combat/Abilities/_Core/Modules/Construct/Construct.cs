@@ -1,4 +1,5 @@
 using UnityEngine;
+using JoeConticello.ModularCombatCore;
 
 /// <summary>
 /// Base class for all constructs (turrets, pylons, totems, etc.)

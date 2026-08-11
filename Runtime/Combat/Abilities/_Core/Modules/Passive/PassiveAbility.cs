@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
-
+using JoeConticello.ModularCombatCore;
 /// <summary>
 /// Configuration for custom passive effects. The shared <see cref="CustomPassiveEffectConfig"/> prefab is instantiated
 /// at spawn time.

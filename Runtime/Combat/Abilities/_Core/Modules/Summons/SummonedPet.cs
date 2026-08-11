@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using FishNet;
 using JoeConticello.VisualEffects;
-
+using JoeConticello.ModularCombatCore;
 /// <summary>
 /// Runtime controller for summoned pets. Extends Pet to inherit follow behavior,
 /// and adds autonomous combat: finds the closest enemy and attacks on an attack speed timer.
