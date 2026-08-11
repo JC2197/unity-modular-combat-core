@@ -2,63 +2,20 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum DamageCategory
-{
-    Physical,
-    Elemental,
-    Magical,
-    Special
-}
-
-public enum PhysicalSubcategory
-{
-    None,
-    Piercing,
-    Slashing,
-    Bludgeoning,
-    Bleeding,
-}
- 
-public enum ElementalSubcategory
-{
-    None,
-    Fire,
-    Ice,
-    Lightning,
-    Earth,
-    Poison,
-    Nature
-}
-
-public enum MagicalSubcategory
-{
-    None,
-    Arcane,
-    Dark,
-    Holy,
-    Chaos,
-}
-
-public enum SpecialSubcategory
-{
-    None,
-    Psychic,
-    True
-}
 
 [CreateAssetMenu(fileName = "DamageType_", menuName = "Damage/Damage Type Data")]
 public class DamageTypeData : ScriptableObject
 {
     [Header("Damage Type Identity")]
-    public string damageTypeName = "Physical";
-    public string displayName = "Physical";
+    public string damageTypeName = "DamageType";
+    public string displayName = "Damage Type";
     [TextArea(2, 4)]
     public string description = "";
     public Color damageColor = Color.red;
     
     [Header("Category & Tags")]
-    public string categoryId = "physical";
-    public string categoryName = "Physical";
+    public string categoryId = "";
+    public string categoryName = "";
     public string subcategoryName = "";
     public List<string> tags = new List<string>();
     
@@ -72,15 +29,19 @@ public class DamageTypeData : ScriptableObject
     public bool createResistanceStat = true;
     public bool createDamageBonusStat = true;
 
+    [Header("Damage Calculation")]
+    [Tooltip("Attacker stat IDs that increase this damage type. If left empty, a default ID is derived from the damage type name.")]
+    public List<string> attackerModifierStatIds = new List<string>();
+
+    [Tooltip("Defender stat IDs that reduce this damage type. If left empty, a default ID is derived from the damage type name.")]
+    public List<string> defenderResistanceStatIds = new List<string>();
+
+    [Tooltip("Whether the shared DamageBonus stat should also affect this damage type.")]
+    public bool includeGenericDamageBonus = true;
+
     [Header("Special Properties")]
     public bool ignoresShields = false;
-
-    [SerializeField, HideInInspector] private DamageCategory category = DamageCategory.Physical;
-    [SerializeField, HideInInspector] private PhysicalSubcategory physicalSubcategory = PhysicalSubcategory.None;
-    [SerializeField, HideInInspector] private ElementalSubcategory elementalSubcategory = ElementalSubcategory.None;
-    [SerializeField, HideInInspector] private MagicalSubcategory magicalSubcategory = MagicalSubcategory.None;
-    [SerializeField, HideInInspector] private SpecialSubcategory specialSubcategory = SpecialSubcategory.None;
-
+    
     public string GetCategoryName()
     {
         if (!string.IsNullOrWhiteSpace(categoryName))
@@ -134,13 +95,14 @@ public class DamageTypeData : ScriptableObject
         return seen;
     }
 
-    public float CalculateDamage(float baseDamage, MainStats attackerStats, DefenseStats defenderStats)
+    public IEnumerable<string> GetAttackerModifierStatIds()
     {
-        // Damage calculation now uses the unified stat system
-        // Resistances are applied via the StatContainer in IDamageable
-        // This method is simplified to just return base damage
-        // Actual mitigation happens in the receiving entity's damage calculation
-        return baseDamage;
+        return GetNormalizedStatIds(attackerModifierStatIds, createDamageBonusStat ? BuildDefaultStatId("DamageBonus") : null);
+    }
+
+    public IEnumerable<string> GetDefenderResistanceStatIds()
+    {
+        return GetNormalizedStatIds(defenderResistanceStatIds, createResistanceStat ? BuildDefaultStatId("Resistance") : null);
     }
 
     public float CalculateDamage(float baseDamage, DefenseStats defenderStats)
@@ -163,47 +125,45 @@ public class DamageTypeData : ScriptableObject
 
     private void OnEnable()
     {
-        MigrateLegacyCategoryData();
         NormalizeValues();
     }
 
     private void OnValidate()
     {
-        MigrateLegacyCategoryData();
         NormalizeValues();
     }
 
-    private void MigrateLegacyCategoryData()
+    private IEnumerable<string> GetNormalizedStatIds(List<string> configuredIds, string fallbackId)
     {
-        if (string.IsNullOrWhiteSpace(categoryId))
-            categoryId = category.ToString();
+        HashSet<string> uniqueIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        if (string.IsNullOrWhiteSpace(categoryName))
-            categoryName = category.ToString();
-
-        if (string.IsNullOrWhiteSpace(subcategoryName))
+        if (configuredIds != null)
         {
-            string legacySubtype = GetLegacySubcategoryName();
-            if (!string.IsNullOrWhiteSpace(legacySubtype) && !string.Equals(legacySubtype, category.ToString(), StringComparison.OrdinalIgnoreCase))
-                subcategoryName = legacySubtype;
+            for (int i = 0; i < configuredIds.Count; i++)
+            {
+                string normalized = NormalizeStatId(configuredIds[i]);
+                if (!string.IsNullOrWhiteSpace(normalized) && uniqueIds.Add(normalized))
+                    yield return normalized;
+            }
         }
+
+        string normalizedFallback = NormalizeStatId(fallbackId);
+        if (!string.IsNullOrWhiteSpace(normalizedFallback) && uniqueIds.Add(normalizedFallback))
+            yield return normalizedFallback;
     }
 
-    private string GetLegacySubcategoryName()
+    private string BuildDefaultStatId(string suffix)
     {
-        switch (category)
-        {
-            case DamageCategory.Physical:
-                return physicalSubcategory != PhysicalSubcategory.None ? physicalSubcategory.ToString() : category.ToString();
-            case DamageCategory.Elemental:
-                return elementalSubcategory != ElementalSubcategory.None ? elementalSubcategory.ToString() : category.ToString();
-            case DamageCategory.Magical:
-                return magicalSubcategory != MagicalSubcategory.None ? magicalSubcategory.ToString() : category.ToString();
-            case DamageCategory.Special:
-                return specialSubcategory != SpecialSubcategory.None ? specialSubcategory.ToString() : category.ToString();
-            default:
-                return category.ToString();
-        }
+        string baseName = string.IsNullOrWhiteSpace(damageTypeName) ? displayName : damageTypeName;
+        if (string.IsNullOrWhiteSpace(baseName))
+            return string.Empty;
+
+        return $"{baseName.Trim()}{suffix}";
+    }
+
+    private static string NormalizeStatId(string value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
     }
 
     private void NormalizeValues()
@@ -229,6 +189,29 @@ public class DamageTypeData : ScriptableObject
         {
             tags = normalizedTags;
         }
+
+        attackerModifierStatIds = NormalizeStatIdList(attackerModifierStatIds);
+        defenderResistanceStatIds = NormalizeStatIdList(defenderResistanceStatIds);
+    }
+
+    private static List<string> NormalizeStatIdList(List<string> values)
+    {
+        List<string> normalized = new List<string>();
+        HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (values == null)
+            return normalized;
+
+        for (int i = 0; i < values.Count; i++)
+        {
+            string value = NormalizeStatId(values[i]);
+            if (string.IsNullOrWhiteSpace(value) || !seen.Add(value))
+                continue;
+
+            normalized.Add(value);
+        }
+
+        return normalized;
     }
 }
 

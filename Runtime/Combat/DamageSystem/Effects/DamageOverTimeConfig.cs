@@ -11,7 +11,7 @@ public abstract class DamageOverTimeConfig : EffectConfig
     [Header("Damage Settings")]
     [Tooltip("Type of damage dealt (from DamageTypeDatabase)")]
     [DamageTypeDropdown]
-    public string damageTypeName = "Physical";
+    public string damageTypeName = "";
 
     [Tooltip("Damage dealt per tick (can be overridden per-ability)")]
     public float damagePerTick = 5f;

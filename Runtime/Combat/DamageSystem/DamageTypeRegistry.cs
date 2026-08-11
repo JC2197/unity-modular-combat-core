@@ -1,9 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public static class DamageTypeRegistry
 {
-    private static Dictionary<string, DamageTypeData> damageTypes = new Dictionary<string, DamageTypeData>();
+    private static Dictionary<string, DamageTypeData> damageTypes = new Dictionary<string, DamageTypeData>(StringComparer.OrdinalIgnoreCase);
     private static bool isInitialized = false;
     
     public static void Initialize()
@@ -13,14 +14,15 @@ public static class DamageTypeRegistry
         // Load all damage types from Resources folder
         DamageTypeData[] allDamageTypes = Resources.LoadAll<DamageTypeData>("DamageTypes");
         
-        damageTypes.Clear();
+        damageTypes = new Dictionary<string, DamageTypeData>(StringComparer.OrdinalIgnoreCase);
         
         foreach (var damageType in allDamageTypes)
         {
-            if (damageType != null && !string.IsNullOrEmpty(damageType.displayName))
-            {
-                damageTypes[damageType.displayName] = damageType;
-            }
+            if (damageType == null)
+                continue;
+
+            RegisterName(damageType.damageTypeName, damageType);
+            RegisterName(damageType.displayName, damageType);
         }
         
         isInitialized = true;
@@ -54,5 +56,11 @@ public static class DamageTypeRegistry
         if (!isInitialized) Initialize();
         
         return damageTypes.ContainsKey(name);
+    }
+
+    private static void RegisterName(string name, DamageTypeData damageType)
+    {
+        if (!string.IsNullOrWhiteSpace(name))
+            damageTypes[name.Trim()] = damageType;
     }
 }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 /// <summary>
 /// Central database for all damage types in the game.
@@ -33,7 +34,9 @@ public class DamageTypeDatabase : ScriptableObject
     
     public DamageTypeData GetDamageType(string typeName)
     {
-        return damageTypes.Find(t => t.damageTypeName == typeName);
+        return damageTypes.Find(t => t != null &&
+            (string.Equals(t.damageTypeName, typeName, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(t.displayName, typeName, StringComparison.OrdinalIgnoreCase)));
     }
     
     public DamageTypeData GetDamageType(int index)
@@ -45,7 +48,9 @@ public class DamageTypeDatabase : ScriptableObject
     
     public int GetDamageTypeIndex(string typeName)
     {
-        return damageTypes.FindIndex(t => t.damageTypeName == typeName);
+        return damageTypes.FindIndex(t => t != null &&
+            (string.Equals(t.damageTypeName, typeName, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(t.displayName, typeName, StringComparison.OrdinalIgnoreCase)));
     }
     
     public string[] GetDamageTypeNames()

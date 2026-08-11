@@ -29,7 +29,7 @@ public class HitboxConfig
 
     [Tooltip("Type of damage dealt.")]
     [DamageTypeDropdown]
-    public string damageTypeName = "Physical";
+    public string damageTypeName = "";
 
     [Tooltip("Use the equipped weapon's damage (and its damage type) instead of the fixed damage/type above.")]
     public bool useWeaponDamage = false;

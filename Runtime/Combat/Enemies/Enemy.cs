@@ -106,7 +106,16 @@ public class Enemy : Organism
             Debug.LogError($"[Enemy] {gameObject.name} has no EnemyConfig assigned!");
             return;
         }
-        config.stats.CopyToStatContainer(statContainer);
+
+        statContainer.InitializeFromDatabase();
+        if (config.stats != null)
+        {
+            foreach (StatValue stat in config.stats.GetAllStats())
+            {
+                if (stat != null)
+                    statContainer.SetStat(stat.StatId, stat.CurrentValue);
+            }
+        }
 
         // Re-initialize health after stats are copied (base.Awake set it to 0)
         float maxHealth = statContainer.GetStat("MaxHealth");

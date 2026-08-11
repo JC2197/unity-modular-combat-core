@@ -68,7 +68,7 @@ public class DamageFloaterManager : MonoBehaviour
     /// <summary>
     /// Shows damage floater with directional movement based on attacker position
     /// </summary>
-    public void ShowDamage(Vector3 targetPosition, float damage, string damageType = "Physical", bool isCritical = false, Vector3? attackerPosition = null, Transform targetTransform = null)
+    public void ShowDamage(Vector3 targetPosition, float damage, string damageType = "", bool isCritical = false, Vector3? attackerPosition = null, Transform targetTransform = null)
     {
         if (damageFloaterPrefab == null || config == null)
         {

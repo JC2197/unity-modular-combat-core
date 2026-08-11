@@ -999,7 +999,7 @@ public abstract class Organism : NetworkBehaviour, IDamageable, IDamageFloaterSo
 
 protected virtual float CalculateDamage(float baseDamage, string damageTypeName, float critMultiplier = 1f)
 {
-    DamageTypeData damageType = damageTypeRegistry.Find(dt => dt.damageTypeName == damageTypeName);
+    DamageTypeData damageType = ResolveDamageType(damageTypeName);
 
     // NOTE: critMultiplier has already been applied by DamageCalculator before TakeDamage is called.
     // Applying it here again would double-multiply crit damage.  The parameter is kept in the
@@ -1012,11 +1012,13 @@ protected virtual float CalculateDamage(float baseDamage, string damageTypeName,
     {
         float resistance = 0f;
 
-        // Check for specific resistance stat based on damage type name
-        string resistanceStatName = $"{damageTypeName}Resistance";
-        if (statContainer.HasStat(resistanceStatName))
+        if (damageType != null)
         {
-            resistance = statContainer.GetStat(resistanceStatName);
+            foreach (string statId in damageType.GetDefenderResistanceStatIds())
+            {
+                if (statContainer.HasStat(statId))
+                    resistance += statContainer.GetStat(statId);
+            }
         }
 
         // Apply resistance (percentage reduction)
@@ -1025,6 +1027,22 @@ protected virtual float CalculateDamage(float baseDamage, string damageTypeName,
     }
 
     return Mathf.Max(0, finalDamage);
+}
+
+private DamageTypeData ResolveDamageType(string damageTypeName)
+{
+    if (string.IsNullOrWhiteSpace(damageTypeName))
+        return null;
+
+    DamageTypeData damageType = damageTypeRegistry.Find(dt => dt != null &&
+        (string.Equals(dt.damageTypeName, damageTypeName, System.StringComparison.OrdinalIgnoreCase)
+        || string.Equals(dt.displayName, damageTypeName, System.StringComparison.OrdinalIgnoreCase)));
+
+    if (damageType != null)
+        return damageType;
+
+    return DamageTypeDatabase.Instance?.GetDamageType(damageTypeName)
+        ?? DamageTypeRegistry.GetDamageType(damageTypeName);
 }
 
 public virtual float GetCurrentHealth() => _syncCurrentHealth.Value;

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using JoeConticello.ModularCombatCore;
 
 /// <summary>
 /// Configuration for enemy behavior, stats, and movement.
@@ -15,8 +16,8 @@ public class EnemyConfig : ScriptableObject
     [Tooltip("Display name shown to player")]
     public string displayName = "Enemy";
 
-    [Tooltip("Enemy stat values (health, resistances, etc.)")]
-    public EnemyStats stats = new EnemyStats();
+    [Tooltip("Enemy stat values pulled directly from the shared stat container model.")]
+    public StatContainer stats = new StatContainer();
     public bool isBoss = false;
     [Header("Detection")]
     [Tooltip("How far enemy can detect targets")]
@@ -83,7 +84,7 @@ public class EnemyConfig : ScriptableObject
     
     [Tooltip("Damage type for collision damage")]
     [DamageTypeDropdown]
-    public string collisionDamageType = "Bludgeoning";
+    public string collisionDamageType = "";
 
     [Tooltip("Layers that can be hit by collision damage (set to 'Player' layer to hit player)")]
     public LayerMask collisionHitLayers = -1;

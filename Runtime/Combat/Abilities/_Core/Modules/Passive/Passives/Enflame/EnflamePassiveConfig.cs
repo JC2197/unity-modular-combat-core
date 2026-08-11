@@ -7,7 +7,7 @@ public class EnflamePassiveConfig : PassiveAbilityConfigBase
     [SerializeField] private float damageDealt = 5f;
 
     [DamageTypeDropdown]
-    [SerializeField] private string damageType = "Fire";
+    [SerializeField] private string damageType = "";
 
     [SerializeField] private GameObject enflameOnhitEffectPrefab;
 

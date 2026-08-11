@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using JoeConticello.ModularCombatCore;
 
 /// <summary>
 /// Utility class for calculating final damage with bonuses from attacker's stats
@@ -7,38 +8,46 @@ using System.Collections.Generic;
 public static class DamageCalculator
 {
     /// <summary>
-    /// Calculate final damage by applying the attacker's damage bonuses.
-    /// Call this before dealing damage to apply Fire Damage Bonus, Lightning Damage Bonus, etc.
+    /// Calculate final damage by applying the attacker's damage modifiers.
     /// </summary>
     /// <param name="baseDamage">Base damage before bonuses</param>
-    /// <param name="damageTypeName">Type of damage (Fire, Lightning, Physical, etc.)</param>
+    /// <param name="damageTypeName">Configured damage type identifier</param>
     /// <param name="attacker">The GameObject dealing the damage</param>
     /// <returns>Final damage with bonuses applied</returns>
-    /// <summary>
-    /// Look up ALL damage bonuses for a given damage type from the attacker's stat container.
-    /// Convention: {DamageType}DamageBonus (e.g. PoisonDamageBonus) + generic DamageBonus.
-    /// Stats are stored as fractional percentages: 0.15 = +15% damage.
-    /// </summary>
-    private static float GetDamageBonusForType(StatContainer stats, string damageTypeName)
+    private static float GetDamageBonusForType(StatContainer stats, DamageTypeData damageType)
     {
+        if (stats == null)
+            return 0f;
+
         float total = 0f;
 
-        // Type-specific bonus (e.g. PhysicalDamageBonus, FireDamageBonus)
-        // Stat IDs follow the convention: {DamageType}DamageBonus
-        string typeStatID = $"{damageTypeName}DamageBonus";
-        if (stats.HasStat(typeStatID))
-            total += stats.GetStat(typeStatID);
+        if (damageType != null)
+        {
+            foreach (string statId in damageType.GetAttackerModifierStatIds())
+            {
+                if (stats.HasStat(statId))
+                    total += stats.GetStat(statId);
+            }
+        }
 
-        // Generic bonus that applies to ALL damage types
-        if (stats.HasStat("DamageBonus"))
+        if ((damageType == null || damageType.includeGenericDamageBonus) && stats.HasStat("DamageBonus"))
             total += stats.GetStat("DamageBonus");
 
         return total;
     }
 
+    private static DamageTypeData ResolveDamageType(string damageTypeName)
+    {
+        if (string.IsNullOrWhiteSpace(damageTypeName))
+            return null;
+
+        return DamageTypeDatabase.Instance?.GetDamageType(damageTypeName)
+            ?? DamageTypeRegistry.GetDamageType(damageTypeName);
+    }
+
     public static float CalculateFinalDamage(float baseDamage, string damageTypeName, GameObject attacker)
     {
-        if (attacker == null || string.IsNullOrEmpty(damageTypeName))
+        if (attacker == null)
         {
             return baseDamage;
         }
@@ -50,9 +59,8 @@ public static class DamageCalculator
             return baseDamage;
         }
 
-        // Collect all relevant damage bonuses (type-specific + generic).
-        // Stats are stored as fractional percentages (0.15 = 15%) — do NOT divide by 100.
-        float damageBonus = GetDamageBonusForType(organism.AllStats, damageTypeName);
+        DamageTypeData damageType = ResolveDamageType(damageTypeName);
+        float damageBonus = GetDamageBonusForType(organism.AllStats, damageType);
         
         float finalDamage = baseDamage * (1f + damageBonus);
         
@@ -86,7 +94,7 @@ public static class DamageCalculator
             return baseDamage;
         }
         
-        return baseDamage;
+        return CalculateFinalDamage(baseDamage, damageTypeName, attacker);
     }
     
     /// <summary>

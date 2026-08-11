@@ -59,7 +59,7 @@ public class SummonConfig
 
     [DamageTypeDropdown]
     [Tooltip("Damage type dealt by the summon")]
-    public string damageTypeName = "Physical";
+    public string damageTypeName = "";
 
     [Tooltip("Range at which the summon can attack (melee range or projectile launch range)")]
     public float attackRange = 1.5f;

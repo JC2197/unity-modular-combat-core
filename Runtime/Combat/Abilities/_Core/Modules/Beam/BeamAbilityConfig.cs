@@ -67,7 +67,7 @@ public class BeamAbilityConfig
 
     [Tooltip("Type of damage dealt")]
     [DamageTypeDropdown]
-    public string damageTypeName = "Energy";
+    public string damageTypeName = "";
 
     [Tooltip("Layers the beam can hit")]
     public LayerMask hitLayers = -1;
