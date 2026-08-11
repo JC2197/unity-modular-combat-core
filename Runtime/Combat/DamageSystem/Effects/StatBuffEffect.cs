@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-
+using JoeConticello.ModularCombatCore;
 /// <summary>
 /// Runtime stat buff/debuff effect that mutates a target StatContainer for the effect duration,
 /// then restores values on remove.
