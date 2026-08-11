@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using JoeConticello.ModularCombatCore;
 /// <summary>
 /// Defines a character class that can be shared by multiple character instances.
 /// Contains the shared appearance, animations, base stats, and equippable weapons.
