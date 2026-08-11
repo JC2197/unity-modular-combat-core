@@ -6,7 +6,8 @@
 		"FishNet.Runtime",
 		"Unity.InputSystem",
 		"Unity.RenderPipelines.Universal.Runtime",
-		"JoeConticello.VisualEffects"
+		"JoeConticello.VisualEffects",
+		"Unity.TextMeshPro.dll"
 	],
 	"includePlatforms": [
 		"Editor"

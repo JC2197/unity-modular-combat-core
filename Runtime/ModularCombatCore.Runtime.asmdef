@@ -6,7 +6,8 @@
 		"Unity.InputSystem",
 		"Unity.RenderPipelines.Universal.Runtime",
 		"JoeConticello.VisualEffects",
-		"Unity.TMPro"
+		"Unity.TextMeshPro.dll",
+		"Unity.TextMeshPro"
 	],
 	"includePlatforms": [],
 	"excludePlatforms": [],
